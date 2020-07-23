@@ -1,5 +1,4 @@
 import socket
-
 import sys
 import subprocess
 from cmd import Cmd
@@ -85,18 +84,18 @@ while True:
         break
 
 # Create a TCP socket
-print("Creating socket")
+print("Creating socket...")
 connSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # Connect to the server
-print("Connecting to server")
+print("Connecting to server...")
 connSock.connect((serverAddr, serverPort))
 
-print("commands start here")
+print("Available Commands to use: ls, get, put, exit")
 prompt = ftp_command()
-prompt.prompt = 'ftp> '
+prompt.prompt = 'FTP> '
 # enable client input commands
-prompt.cmdloop('FTP connection established')
+prompt.cmdloop('Connection established...')
 
 
 

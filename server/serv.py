@@ -3,8 +3,6 @@ import sys
 import subprocess
 import commands
 
-# import commands
-
 # Command line checks
 if len(sys.argv) < 2:
 	print ('ERROR:To Run: python3 ' + sys.argv[0] + ' <Port Number> ')
@@ -24,7 +22,6 @@ while True:
         print('PORT NUMBER format is correct: proceed')
         break
 
-
 # Create a welcome socket.
 welcomeSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -37,13 +34,13 @@ print ('Waiting for connections...')
 
 # Accept connections
 clientSock, addr = welcomeSock.accept()
-print ('Accepted connection from client: ', addr)
-print ('\n')
+print 'Accepted connection from client:', addr
 
 data = ''
 
 def sendData(socket, data):
     dataSize = str(len(data))
+    
     #set header to 10 bytes
     while len(dataSize) < 10:
         dataSize = "0" + dataSize
@@ -56,45 +53,37 @@ def sendData(socket, data):
         dataSent += socket.send(data[dataSent:])
 
 def recvAll(socket, numBytes):
-    recvBuffer = ''
-    tempBuffer = ''
+    recvBuffer = ""
+    tempBuffer = ""
+    
     # ensure all data has been received
     while len(recvBuffer) < numBytes:
         tempBuffer = socket.recv(numBytes)
+        
         # The other side has closed the socket
         if not tempBuffer:
             break
         recvBuffer += tempBuffer
     return recvBuffer
 
-# def recvHeader(socket):
-#     data = ""
-#     fileSize = 0
-#     fileSizeBuffer = ""
-#     #receive header size
-#     fileSizeBuffer = recvAll(socket, 10)
-#     #initialize buffer for file
-#     fileSize = int(fileSizeBuffer)
-
-#     # receive a file given a file size
-#     data = recvAll(socket, fileSize)
-#     return data
-
-def recv(sock):
+def recvHeader(socket):
     data = ""
-    file_size = 0
-    file_size_buff = ""
+    fileSize = 0
+    fileSizeBuffer = ""
+
     #receive header size
-    file_size_buff = recvAll(sock, 10)
-    #initialize buffer for file
-    file_size = int(file_size_buff, base=10)
+    fileSizeBuffer = recvAll(socket, 10)
+    
+    #initialize buffer
+    fileSize = int(fileSizeBuffer, base=10)
 
     # receive a file given a file size
-    data = recvAll(sock, file_size)
+    data = recvAll(socket, fileSize)
     return data
 
 def connection():
     temp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    
     # open an ephemeral port to send data
     temp_socket.bind(('', 0))
     socket_number = str(temp_socket.getsockname()[1])
@@ -103,31 +92,17 @@ def connection():
     new_socket, addr = temp_socket.accept()
     return new_socket
 
-# def switchcase():
-#     print(('What would you like to do?\n'))
-#     print('List files, type < ls >')
-#     print('Receive files from the Client? type < get >\n')
-#     print('Send files to the Client? type < put >\n')
-#     print('Close the connection, type < exit >\n')
-#     choice = raw_input()
-#     args = shlex.split(choice)
-#     print(args)
-    
 while True:
-    try:
-        command = recv(clientSock)
-        if command == 'ls':      
-            temp = ''
-            dataSocket = connection()
-            for line in commands.getoutput('ls'):
-                temp += line
+    command = recvHeader(clientSock)
+    if command == 'ls':      
+        temp = ''
+        dataSocket = connection()
+        for line in commands.getoutput('ls'):
+            temp += line
 
-
-            sendData(dataSocket, temp)
-            print('************SUCCESS of ls cmd*******')
-            dataSocket.close()
-    except:
-        pass
+        sendData(dataSocket, temp)
+        print('************ls command was successfully sent*******')
+        dataSocket.close()
 clientSock.close()
 print("Command Socket Closed")
 
