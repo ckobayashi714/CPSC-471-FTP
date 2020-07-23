@@ -2,6 +2,7 @@ import socket
 import sys
 import subprocess
 import commands
+import os
 
 # Command line checks
 if len(sys.argv) < 2:
@@ -23,6 +24,7 @@ while True:
         break
 
 # Create a welcome socket.
+print("Creating Welcome socket...")
 welcomeSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # Bind the socket to the port
@@ -70,15 +72,14 @@ def recvHeader(socket):
     data = ""
     fileSize = 0
     fileSizeBuffer = ""
-
-    #receive header size
+    # header size buffer
     fileSizeBuffer = recvAll(socket, 10)
-    
-    #initialize buffer
-    fileSize = int(fileSizeBuffer, base=10)
-
-    # receive a file given a file size
-    data = recvAll(socket, fileSize)
+    try:
+        fileSize = int(fileSizeBuffer, base=10)
+        # receive a file given a file size
+        data = recvAll(socket, fileSize)
+    except:
+        pass
     return data
 
 def connection():
@@ -94,17 +95,22 @@ def connection():
 
 while True:
     command = recvHeader(clientSock)
-    if command == 'ls':      
+    if command == "ls":      
         temp = ''
         dataSocket = connection()
         for line in commands.getoutput('ls'):
             temp += line
-
         sendData(dataSocket, temp)
         print('************ls command was successfully received and accepted*******')
         dataSocket.close()
+        
+     # exit command
+    if command == "exit":
+        print('***********exit command was successfully received and accepted*******')
+        break
+
 clientSock.close()
-print("Command Socket Closed")
+print("***********Command Socket Closed***********")
 
 
 

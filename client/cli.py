@@ -2,6 +2,7 @@ import socket
 import sys
 import subprocess
 from cmd import Cmd
+import os
 
 # Command line checks
 if len(sys.argv) < 3:
@@ -10,37 +11,38 @@ if len(sys.argv) < 3:
 serverAddr = sys.argv[1]
 serverPort = sys.argv[2]
 
+def sendData(socket, data):
+    dataSize = str(len(data))
 
-def send_data(sock, data):
-    data_size = str(len(data))
     #set header to 10 bytes
-    while len(data_size) < 10:
-        data_size = "0" + data_size
+    while len(dataSize) < 10:
+        dataSize = "0" + dataSize
 
-    data = data_size + data
-    data_sent = 0
+    data = dataSize + data
+    dataSent = 0
 
     #ensure all data is sent
-    while data_sent < len(data):
-        data_sent += sock.send(data[data_sent:])
+    while dataSent != len(data):
+        dataSent += socket.send(data[dataSent:])
 
 def recvAll(socket, numBytes):
+    recvBuffer = ""
+    tempBuffer = ""
 
-    recvBuffer = ''
-    tmpBuffer = ''
-    # ensure all data has been recieved
+    # ensure all data has been received
     while len(recvBuffer) < numBytes:
-        tmpBuffer = socket.recv(numBytes)
+        tempBuffer = socket.recv(numBytes)
+
         # The other side has closed the socket
-        if not tmpBuffer:
+        if not tempBuffer:
             break
-        recvBuffer += tmpBuffer
+        recvBuffer += tempBuffer
     return recvBuffer
 
 def recvHeader(socket):
-    data = ''
+    data = ""
     fileSize = 0
-    fileSizeBuffer = ''
+    fileSizeBuffer = ""
     # header size buffer
     fileSizeBuffer = recvAll(socket, 10)
     try:
@@ -50,13 +52,14 @@ def recvHeader(socket):
     except:
         pass
     return data
-class ftp_command(Cmd):
-    def do_ls(self, args):
-        if len(args) == 0:
+class ftpCommands(Cmd):
+    def do_ls(self, ls):
+        self.ls = ls
+        if len(ls) == 0:
             msg = 'ls'
             subprocess.call(msg)
             # send ls command to server
-            send_data(connSock, msg)
+            sendData(connSock, msg)
             temp_port = int(recvHeader(connSock))
             data_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             data_socket.connect((serverAddr, temp_port))
@@ -68,7 +71,20 @@ class ftp_command(Cmd):
                 print (temp)
             data_socket.close()
         else:
-            print("ls does not take arguments")
+            print('Error: try again')
+
+    def do_exit(self, exit):
+        self.exit = exit
+        if len(exit) == 0:
+            msg = 'exit'
+            # End connection to server
+            sendData(connSock, msg)
+            print(recvHeader(connSock))
+            return True
+        else:
+            print('Error: try again')
+
+
 
 #check for valid port
 while True:
@@ -92,12 +108,9 @@ print("Connecting to server...")
 connSock.connect((serverAddr, serverPort))
 
 print("Available Commands to use: ls, get, put, exit")
-prompt = ftp_command()
-prompt.prompt = 'FTP> '
+switch = ftpCommands()
+switch.prompt = 'FTP> '
 # enable client input commands
-prompt.cmdloop('Connection established...')
-
-
-
+switch.cmdloop('Connection established...')
 connSock.close()
 print("Command Socket Closed")
