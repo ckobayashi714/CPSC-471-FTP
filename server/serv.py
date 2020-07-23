@@ -101,7 +101,7 @@ while True:
             temp += line
 
         sendData(dataSocket, temp)
-        print('************ls command was successfully sent*******')
+        print('************ls command was successfully received and accepted*******')
         dataSocket.close()
 clientSock.close()
 print("Command Socket Closed")
