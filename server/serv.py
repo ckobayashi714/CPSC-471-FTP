@@ -20,7 +20,7 @@ while True:
         sys.exit()
     else:
         listenPort = int(listenPort)
-        print('PORT NUMBER format is correct: proceed')
+        print('PORT NUMBER format is correct: OK to proceed')
         break
 
 # Create a welcome socket.
@@ -109,8 +109,56 @@ while True:
         print('***********exit command was successfully received and accepted*******')
         break
 
+    if command == "get":
+        dataSocket = connection()
+        file_name = recvHeader(dataSocket)
+        while True:
+            try:
+                file = open(file_name, "r")
+            except:
+                print("problem opening the file...", file_name)
+            try:
+                #send file byte
+                byte = file.read(1)
+                while byte != "":
+                    sendData(dataSocket, byte)
+                    byte = file.read(1)
+                print("*********get command was successfully received and accepted")
+            finally:
+                file.close()
+                dataSocket.close()
+                break
+
+    # put command
+    if command == "put":
+        dataSocket = connection()
+        file_name = recvHeader(dataSocket)
+        print("***********put command was successfully received and accepted")
+        try:
+            if os.path.exists(file_name):
+                i = 1
+                num = "(" + str(i) + ")"
+                f_name, f_extension = os.path.splitext(file_name)
+                tmp = f_name
+                file_name = tmp + num + f_extension
+                while os.path.exists(file_name):
+                    i += 1
+                    num = "(" + str(i) + ")"
+                    file_name = tmp + num + f_extension
+            file = open(file_name, "w+")
+            while 1:
+                tmp = recvHeader(dataSocket)
+                if not tmp:
+                    break
+                file.write(tmp)
+            file.close()
+            print("File download is complete...")
+        except socket.error as socketerror:
+            print("Error: ", socketerror)
+        dataSocket.close()
+
 clientSock.close()
-print("***********Command Socket Closed***********")
+print("***********Command Socket Closed****************")
 
 
 

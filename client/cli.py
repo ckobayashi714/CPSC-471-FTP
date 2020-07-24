@@ -61,15 +61,15 @@ class ftpCommands(Cmd):
             # send ls command to server
             sendData(connSock, msg)
             temp_port = int(recvHeader(connSock))
-            data_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            data_socket.connect((serverAddr, temp_port))
+            dataSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            dataSocket.connect((serverAddr, temp_port))
             temp = ''
             while 1:
-                temp = recvHeader(data_socket)
+                temp = recvHeader(dataSocket)
                 if not temp:
                     break
                 print (temp)
-            data_socket.close()
+            dataSocket.close()
         else:
             print('Error: try again')
 
@@ -84,7 +84,76 @@ class ftpCommands(Cmd):
         else:
             print('Error: try again')
 
+    def do_get(self, get):
+        self.get = get
+        if len(get) > 0:
+            msg = 'get'
+            filename = get
+            # send get to server
+            sendData(connSock, msg)
+            tmp_port = int(recvHeader(connSock))
+            # uses tcp to transfer data
+            dataSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            dataSocket.connect((serverAddr, tmp_port))
+            sendData(dataSocket, filename)
+            print("downloading file...")
+            # if valid file
+            if os.path.exists(filename):
+                i = 1
+                num = "(" + str(i) + ")"
+                f_name, f_extension = os.path.splitext(filename)
+                tmp = f_name
+                filename = tmp + num + f_extension
+                while os.path.exists(filename):
+                    i += 1
+                    num = "(" + str(i) + ")"
+                    filename = tmp + num + f_extension
+            # open file to read and send
+            file = open(filename, "w+")
+            while 1:
+                tmp = recvHeader(dataSocket)
+                if not tmp:
+                    break
+                file.write(tmp)
+            file.close()
+            dataSocket.close()
+            print("File download is complete!: {}".format(filename))
+        else:
+            print('Error: get command needs name of file to download, try again')
 
+    def do_put(self, put):
+        self.put = put
+        if len(put) > 0:
+            msg = 'put'
+            filename = put
+            # send put to server
+            sendData(connSock, msg)
+            tmp_port = int(recvHeader(connSock))
+            dataSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            dataSocket.connect((serverAddr, tmp_port))
+            sendData(dataSocket, filename)
+            print("Uploading file...")
+            while 1:
+                try:
+                    file = open(filename, "r")
+                except:
+                    print("problem opening the file", filename)
+                try:
+                    #send at one byte at a time
+                    bytesCount = 0
+                    byte = file.read(1)
+                    while byte != "":
+                        sendData(dataSocket, byte)
+                        byte = file.read(1)
+                        bytesCount += 1
+                finally:
+                    file.close()
+                    dataSocket.close()
+                    print("File Upload is complete: {} The file size is {} bytes".format(
+                        filename, bytesCount))
+                    break
+        else:
+            print('Error: put command needs name of file to upload, try again')
 
 #check for valid port
 while True:
@@ -96,7 +165,7 @@ while True:
         sys.exit()
     else:
         serverPort = int(serverPort)
-        print('SERVER PORT NUMBER format is correct: proceed')
+        print('SERVER PORT NUMBER format is correct: OK to proceed')
         break
 
 # Create a TCP socket
@@ -104,13 +173,13 @@ print("Creating socket...")
 connSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # Connect to the server
-print("Connecting to server...")
+print("Connecting to FTP server...")
 connSock.connect((serverAddr, serverPort))
 
-print("Available Commands to use: ls, get, put, exit")
 switch = ftpCommands()
 switch.prompt = 'FTP> '
 # enable client input commands
-switch.cmdloop('Connection established...')
+switch.cmdloop(
+	'Connection established...\nAvailable Commands to use: ls, get, put, exit')
 connSock.close()
 print("Command Socket Closed")
