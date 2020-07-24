@@ -126,6 +126,7 @@ class ftpCommands(Cmd):
         if len(put) > 0:
             msg = 'put'
             filename = put
+            if os.path.exists(filename)
             # send put to server
             sendData(connSock, msg)
             tmp_port = int(recvHeader(connSock))
@@ -182,4 +183,4 @@ switch.prompt = 'FTP> '
 switch.cmdloop(
 	'Connection established...\nAvailable Commands to use: ls, get, put, exit')
 connSock.close()
-print("Command Socket Closed")
+print("***********Command Socket Closed****************")
