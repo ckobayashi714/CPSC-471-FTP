@@ -10,7 +10,7 @@ if len(sys.argv) < 2:
 
 listenPort = sys.argv[1]
 
-#check for valid port
+# Check for valid port
 while True:
     try:
         if (listenPort.isdigit() == False):
@@ -30,7 +30,7 @@ welcomeSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # Bind the socket to the port
 welcomeSock.bind(('', listenPort))
 
-#Listen for a connection
+# Listen for a connection
 welcomeSock.listen(1)
 print ('Waiting for connections...')
 
@@ -98,7 +98,7 @@ while True:
     if command == "ls":      
         temp = ''
         dataSocket = connection()
-        for line in commands.getoutput('ls'):
+        for line in commands.getoutput('ls -l'):
             temp += line
         sendData(dataSocket, temp)
         print('************ls command was successfully received and accepted*******')

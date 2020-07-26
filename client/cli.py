@@ -77,7 +77,7 @@ class ftpCommands(Cmd):
         self.exit = exit
         if len(exit) == 0:
             msg = 'exit'
-            # End connection to server
+            # Sends exit command to server
             sendData(connSock, msg)
             print(recvHeader(connSock))
             return True
@@ -89,7 +89,7 @@ class ftpCommands(Cmd):
         if len(get) > 0:
             msg = 'get'
             filename = get
-            # send get to server
+            # Sends get command to server
             sendData(connSock, msg)
             tmp_port = int(recvHeader(connSock))
             # uses tcp to transfer data
@@ -110,7 +110,7 @@ class ftpCommands(Cmd):
                     filename = tmp + num + f_extension
             # open file to read and send
             file = open(filename, "w+")
-            while 1:
+            while True:
                 tmp = recvHeader(dataSocket)
                 if not tmp:
                     break
@@ -126,15 +126,15 @@ class ftpCommands(Cmd):
         if len(put) > 0:
             msg = 'put'
             filename = put
-            if os.path.exists(filename)
-            # send put to server
-            sendData(connSock, msg)
-            tmp_port = int(recvHeader(connSock))
-            dataSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            dataSocket.connect((serverAddr, tmp_port))
-            sendData(dataSocket, filename)
-            print("Uploading file...")
-            while 1:
+            if os.path.exists(filename):
+                # Sends put command to server
+                sendData(connSock, msg)
+                tmp_port = int(recvHeader(connSock))
+                dataSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                dataSocket.connect((serverAddr, tmp_port))
+                sendData(dataSocket, filename)
+                print("Uploading file...")
+            while True:
                 try:
                     file = open(filename, "r")
                 except:
