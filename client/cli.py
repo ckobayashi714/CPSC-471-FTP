@@ -91,30 +91,30 @@ class ftpCommands(Cmd):
             filename = get
             # Sends get command to server
             sendData(connSock, msg)
-            tmp_port = int(recvHeader(connSock))
+            temp_port = int(recvHeader(connSock))
             # uses tcp to transfer data
             dataSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            dataSocket.connect((serverAddr, tmp_port))
+            dataSocket.connect((serverAddr, temp_port))
             sendData(dataSocket, filename)
             print("downloading file...")
             # if valid file
             if os.path.exists(filename):
                 i = 1
-                num = "(" + str(i) + ")"
+                number = "(" + str(i) + ")"
                 f_name, f_extension = os.path.splitext(filename)
-                tmp = f_name
-                filename = tmp + num + f_extension
+                temp = f_name
+                filename = temp + number + f_extension
                 while os.path.exists(filename):
                     i += 1
-                    num = "(" + str(i) + ")"
-                    filename = tmp + num + f_extension
+                    number = "(" + str(i) + ")"
+                    filename = temp + number + f_extension
             # open file to read and send
             file = open(filename, "w+")
             while True:
-                tmp = recvHeader(dataSocket)
-                if not tmp:
+                temp = recvHeader(dataSocket)
+                if not temp:
                     break
-                file.write(tmp)
+                file.write(temp)
             file.close()
             dataSocket.close()
             print("File download is complete!: {}".format(filename))
