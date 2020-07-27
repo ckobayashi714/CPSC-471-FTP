@@ -1,8 +1,9 @@
 import socket
+import os.path
 import sys
 import subprocess
 import commands
-import os
+
 
 # Command line checks
 if len(sys.argv) < 2:
@@ -38,8 +39,6 @@ print ('Waiting for connections...')
 clientSock, addr = welcomeSock.accept()
 print 'Accepted connection from client:', addr
 
-data = ''
-
 def sendData(socket, data):
     dataSize = str(len(data))
     
@@ -54,28 +53,44 @@ def sendData(socket, data):
     while dataSent != len(data):
         dataSent += socket.send(data[dataSent:])
 
+# ************************************************
+# Receives the specified number of bytes
+# from the specified socket
+# @param socket - the socket from which to receive
+# @param numBytes - the number of bytes to receive
+# @return - the bytes received
+# *************************************************
 def recvAll(socket, numBytes):
+    # The buffer
     recvBuffer = ""
+    
+    # The temporary buffer
     tempBuffer = ""
     
-    # ensure all data has been received
+    # Keep receiving till all is received
     while len(recvBuffer) < numBytes:
+        
+        # Attempt to receive bytes
         tempBuffer = socket.recv(numBytes)
         
         # The other side has closed the socket
         if not tempBuffer:
             break
+       
+        # Add the received bytes to the buffer
         recvBuffer += tempBuffer
+
     return recvBuffer
 
 def recvHeader(socket):
     data = ""
     fileSize = 0
     fileSizeBuffer = ""
-    # header size buffer
+    # Receive the first 10 bytes indicating the size of the file
     fileSizeBuffer = recvAll(socket, 10)
     try:
-        fileSize = int(fileSizeBuffer, base=10)
+        # Get the file size
+        fileSize = int(fileSizeBuffer)
         # receive a file given a file size
         data = recvAll(socket, fileSize)
     except:
@@ -83,30 +98,32 @@ def recvHeader(socket):
     return data
 
 def connection():
-    temp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    tempSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     
     # open an ephemeral port to send data
-    temp_socket.bind(('', 0))
-    socket_number = str(temp_socket.getsockname()[1])
+    tempSocket.bind(('', 0))
+    socket_number = str(tempSocket.getsockname()[1])
     sendData(clientSock,  socket_number)
-    temp_socket.listen(1)
-    new_socket, addr = temp_socket.accept()
-    return new_socket
+    tempSocket.listen(1)
+    newSocket, addr = tempSocket.accept()
+    return newSocket
 
 while True:
     command = recvHeader(clientSock)
-    if command == "ls":      
+    if command == "ls":
+        # myCmd = 'ls -hS'
         temp = ''
         dataSocket = connection()
-        for line in commands.getoutput('ls -l'):
+        # os.system(myCmd)
+        for line in commands.getoutput('ls -hS'):
             temp += line
         sendData(dataSocket, temp)
-        print('************ls command was successfully received and accepted*******')
+        print('ls command SUCCESS')
         dataSocket.close()
         
      # exit command
     if command == "exit":
-        print('***********exit command was successfully received and accepted*******')
+        print('exit command SUCCESS')
         break
 
     if command == "get":
@@ -123,17 +140,18 @@ while True:
                 while byte != "":
                     sendData(dataSocket, byte)
                     byte = file.read(1)
-                print("*********get command was successfully received and accepted")
+                print("get command SUCCESS after here")
             finally:
                 file.close()
                 dataSocket.close()
                 break
 
+
     # put command
     if command == "put":
         dataSocket = connection()
         file_name = recvHeader(dataSocket)
-        print("***********put command was successfully received and accepted")
+        print("put command SUCCESS")
         try:
             if os.path.exists(file_name):
                 i = 1
@@ -152,13 +170,13 @@ while True:
                     break
                 file.write(tmp)
             file.close()
-            print("File download is complete...")
+            print("SUCCESS: File transfer is complete...")
         except socket.error as socketerror:
             print("Error: ", socketerror)
         dataSocket.close()
 
 clientSock.close()
-print("***********Command Socket Closed****************")
+print("Command Socket Closed")
 
 
 
