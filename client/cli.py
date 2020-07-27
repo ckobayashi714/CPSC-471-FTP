@@ -4,7 +4,6 @@ import sys
 import subprocess
 from cmd import Cmd
 
-
 # Command line checks
 if len(sys.argv) < 3:
 	print ('ERROR:To Run: python3 ' + sys.argv[0] + ' <Server Machine> ' + ' <Port Number> ')
@@ -49,6 +48,14 @@ def sendData(socket, data):
     while dataSent != len(data):
         dataSent += socket.send(data[dataSent:])
 
+
+# ************************************************
+# Receives the specified number of bytes
+# from the specified socket
+# @param socket - the socket from which to receive
+# @param numBytes - the number of bytes to receive
+# @return - the bytes received
+# *************************************************
 def recvAll(socket, numBytes):
     # The buffer
     recvBuffer = ""
@@ -131,7 +138,7 @@ class MyPrompt(Cmd):
             dataSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             dataSocket.connect((serverAddr, temp_port))
             sendData(dataSocket, filename)
-            # if valid file
+            # print("downloading file...")
             if os.path.exists(filename):
                 print("downloading file...")
                 i = 1
@@ -143,16 +150,18 @@ class MyPrompt(Cmd):
                     i += 1
                     number = "(" + str(i) + ")"
                     filename = temp + number + f_extension
-            # open file to read and send
-            file = open(filename, "w+")
-            while True:
-                temp = recvHeader(dataSocket)
-                if not temp:
-                    break
-                file.write(temp)
-            file.close()
-            dataSocket.close()
-            print("File download is complete!: {}".format(filename))
+            else:
+                print("ERROR: {} does not exist in server, try again".format(filename))
+                file = open(filename, "w+")
+                print("downloading file...")
+                while True:
+                    temp = recvHeader(dataSocket)
+                    if not temp:
+                        break
+                    file.write(temp)
+                file.close()
+                dataSocket.close()
+                print("File download is complete: {}".format(filename))       
         else:
             print('Error: get command needs name of file to download, try again')
 
@@ -171,7 +180,7 @@ class MyPrompt(Cmd):
                 sendData(dataSocket, filename)
                 file = True
             else:
-                print ("ERROR: {} does not exist in client".format(filename))
+                print ("ERROR: {} does not exist in client, try again".format(filename))
                 file = False
             while file:
                 file = open(filename, "r")

@@ -4,7 +4,6 @@ import sys
 import subprocess
 import commands
 
-
 # Command line checks
 if len(sys.argv) < 2:
 	print ('ERROR:To Run: python3 ' + sys.argv[0] + ' <Port Number> ')
@@ -128,49 +127,48 @@ while True:
 
     if command == "get":
         dataSocket = connection()
-        file_name = recvHeader(dataSocket)
-        while True:
-            try:
-                file = open(file_name, "r")
-            except:
-                print("problem opening the file...", file_name)
-            try:
-                #send file byte
+        filename = recvHeader(dataSocket)
+        if os.path.exists(filename):
+            file = open(filename, "r")
+            #send file byte
+            byte = file.read(1)
+            bytesCount = 0
+            while byte != "":
+                sendData(dataSocket, byte)
                 byte = file.read(1)
-                while byte != "":
-                    sendData(dataSocket, byte)
-                    byte = file.read(1)
-                print("get command SUCCESS after here")
-            finally:
-                file.close()
-                dataSocket.close()
-                break
-
+                bytesCount += 1
+            print("get command SUCCESS")
+            print("SUCCESS: {} Uploaded to Client. The file size is {} bytes".format(
+                filename, bytesCount))
+            file.close()
+        else:
+            print("ERROR: Trying to transfer file that does not exist")
+        dataSocket.close()
 
     # put command
     if command == "put":
         dataSocket = connection()
-        file_name = recvHeader(dataSocket)
+        filename = recvHeader(dataSocket)
         print("put command SUCCESS")
         try:
-            if os.path.exists(file_name):
+            if os.path.exists(filename):
                 i = 1
                 num = "(" + str(i) + ")"
-                f_name, f_extension = os.path.splitext(file_name)
-                tmp = f_name
-                file_name = tmp + num + f_extension
-                while os.path.exists(file_name):
+                f_name, f_extension = os.path.splitext(filename)
+                temp = f_name
+                filename = temp + num + f_extension
+                while os.path.exists(filename):
                     i += 1
                     num = "(" + str(i) + ")"
-                    file_name = tmp + num + f_extension
-            file = open(file_name, "w+")
+                    filename = temp + num + f_extension
+            file = open(filename, "w+")
             while 1:
-                tmp = recvHeader(dataSocket)
-                if not tmp:
+                temp = recvHeader(dataSocket)
+                if not temp:
                     break
-                file.write(tmp)
+                file.write(temp)
             file.close()
-            print("SUCCESS: File transfer is complete...")
+            print("SUCCESS: {} downloaded to client".format(filename))
         except socket.error as socketerror:
             print("Error: ", socketerror)
         dataSocket.close()
