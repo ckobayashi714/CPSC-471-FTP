@@ -19,11 +19,11 @@ python cli.py localhost 1234
 Send Commands to Server via Client
 
 ```
-ftp>ls
+ls
 
-ftp>get <filename>
+get <filename>
 
-ftp>put <filename>
+put <filename>
 
-ftp>exit
+exit
 ```
