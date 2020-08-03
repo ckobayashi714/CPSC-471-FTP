@@ -5,7 +5,7 @@ import subprocess
 import commands
 
 # Command line checks
-if len(sys.argv) < 2:
+if len(sys.argv) != 2:
 	print ('ERROR:To Run: python3 ' + sys.argv[0] + ' <Port Number> ')
 
 listenPort = sys.argv[1]

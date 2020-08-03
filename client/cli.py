@@ -5,7 +5,7 @@ import subprocess
 from cmd import Cmd
 
 # Command line checks
-if len(sys.argv) < 3:
+if len(sys.argv) != 3:
 	print ('ERROR:To Run: python3 ' + sys.argv[0] + ' <Server Machine> ' + ' <Port Number> ')
 
 serverAddr = sys.argv[1]
