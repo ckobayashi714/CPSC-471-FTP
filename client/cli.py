@@ -147,7 +147,7 @@ class MyPrompt(Cmd):
             dataSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             dataSocket.connect((serverAddr, temp_port))
             sendData(dataSocket, filename)            
-            file = open(filename, "w+")
+            file = open(filename, "wb")
             print("downloading file...")
             while True:
                 temp = recvHeader(dataSocket)
@@ -178,7 +178,7 @@ class MyPrompt(Cmd):
                 print ("ERROR: {} does not exist in client, try again".format(filename))
                 file = False
             while file:
-                file = open(filename, "r")
+                file = open(filename, "rb")
                 #send at one byte at a time
                 bytesCount = 0
                 byte = file.read(1)
