@@ -33,7 +33,11 @@ connSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 print("Connecting to FTP server...")
 connSock.connect((serverAddr, serverPort))
 
-
+# ************************************************
+# Sends the specified data from the specified socket
+# @param socket - the socket from which to receive
+# @param data - data to send
+# *************************************************
 def sendData(socket, data):
     dataSize = str(len(data))
 
@@ -48,10 +52,8 @@ def sendData(socket, data):
     while dataSent != len(data):
         dataSent += socket.send(data[dataSent:])
 
-
 # ************************************************
-# Receives the specified number of bytes
-# from the specified socket
+# Receives the number of bytes from the specified socket
 # @param socket - the socket from which to receive
 # @param numBytes - the number of bytes to receive
 # @return - the bytes received
@@ -78,6 +80,11 @@ def recvAll(socket, numBytes):
 
     return recvBuffer
 
+# ************************************************
+# Receives the filesize and data from the header from the specified socket
+# @param socket - the socket from which to receive
+# @return - the filesize and data
+# *************************************************
 def recvHeader(socket):
     data = ""
     fileSize = 0
@@ -92,6 +99,8 @@ def recvHeader(socket):
     except:
         pass
     return data
+
+# class to handle all the commands sent to server
 class MyPrompt(Cmd):
     def do_ls(self, ls):
         # myCmd = 'ls -hS'
@@ -137,31 +146,17 @@ class MyPrompt(Cmd):
             # uses tcp to transfer data
             dataSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             dataSocket.connect((serverAddr, temp_port))
-            sendData(dataSocket, filename)
-            # print("downloading file...")
-            if os.path.exists(filename):
-                print("downloading file...")
-                i = 1
-                number = "(" + str(i) + ")"
-                f_name, f_extension = os.path.splitext(filename)
-                temp = f_name
-                filename = temp + number + f_extension
-                while os.path.exists(filename):
-                    i += 1
-                    number = "(" + str(i) + ")"
-                    filename = temp + number + f_extension
-            else:
-                print("ERROR: {} does not exist in server, try again".format(filename))
-                file = open(filename, "w+")
-                print("downloading file...")
-                while True:
-                    temp = recvHeader(dataSocket)
-                    if not temp:
-                        break
-                    file.write(temp)
-                file.close()
-                dataSocket.close()
-                print("File download is complete: {}".format(filename))       
+            sendData(dataSocket, filename)            
+            file = open(filename, "w+")
+            print("downloading file...")
+            while True:
+                temp = recvHeader(dataSocket)
+                if not temp:
+                    break
+                file.write(temp)
+            file.close()
+            dataSocket.close()
+            print("File download is complete: {}".format(filename))       
         else:
             print('Error: get command needs name of file to download, try again')
 
@@ -199,6 +194,7 @@ class MyPrompt(Cmd):
         else:
             print('Error: put command needs name of file to upload, try again')
 
+# main program loop
 if __name__ == '__main__':
     prompt = MyPrompt()
     prompt.prompt = 'FTP> '

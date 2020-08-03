@@ -38,6 +38,11 @@ print ('Waiting for connections...')
 clientSock, addr = welcomeSock.accept()
 print 'Accepted connection from client:', addr
 
+# ************************************************
+# Sends the specified data from the specified socket
+# @param socket - the socket from which to receive
+# @param data - data to send
+# *************************************************
 def sendData(socket, data):
     dataSize = str(len(data))
     
@@ -53,8 +58,7 @@ def sendData(socket, data):
         dataSent += socket.send(data[dataSent:])
 
 # ************************************************
-# Receives the specified number of bytes
-# from the specified socket
+# Receives the number of bytes from the specified socket
 # @param socket - the socket from which to receive
 # @param numBytes - the number of bytes to receive
 # @return - the bytes received
@@ -81,6 +85,11 @@ def recvAll(socket, numBytes):
 
     return recvBuffer
 
+# ************************************************
+# Receives the filesize and data from the header from the specified socket
+# @param socket - the socket from which to receive
+# @return - the filesize and data 
+# *************************************************
 def recvHeader(socket):
     data = ""
     fileSize = 0
@@ -96,10 +105,10 @@ def recvHeader(socket):
         pass
     return data
 
+# open an ephemeral port to send data
 def connection():
     tempSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     
-    # open an ephemeral port to send data
     tempSocket.bind(('', 0))
     socket_number = str(tempSocket.getsockname()[1])
     sendData(clientSock,  socket_number)
@@ -107,6 +116,7 @@ def connection():
     newSocket, addr = tempSocket.accept()
     return newSocket
 
+# wait and accept commands from client
 while True:
     command = recvHeader(clientSock)
     if command == "ls":
@@ -150,27 +160,24 @@ while True:
         dataSocket = connection()
         filename = recvHeader(dataSocket)
         print("put command SUCCESS")
-        try:
-            if os.path.exists(filename):
-                i = 1
+        if os.path.exists(filename):
+            i = 1
+            num = "(" + str(i) + ")"
+            f_name, f_extension = os.path.splitext(filename)
+            temp = f_name
+            filename = temp + num + f_extension
+            while os.path.exists(filename):
+                i += 1
                 num = "(" + str(i) + ")"
-                f_name, f_extension = os.path.splitext(filename)
-                temp = f_name
                 filename = temp + num + f_extension
-                while os.path.exists(filename):
-                    i += 1
-                    num = "(" + str(i) + ")"
-                    filename = temp + num + f_extension
-            file = open(filename, "w+")
-            while 1:
-                temp = recvHeader(dataSocket)
-                if not temp:
-                    break
-                file.write(temp)
-            file.close()
-            print("SUCCESS: {} downloaded to client".format(filename))
-        except socket.error as socketerror:
-            print("Error: ", socketerror)
+        file = open(filename, "w+")
+        while 1:
+            temp = recvHeader(dataSocket)
+            if not temp:
+                break
+            file.write(temp)
+        file.close()
+        print("SUCCESS: {} downloaded to client".format(filename))
         dataSocket.close()
 
 clientSock.close()
